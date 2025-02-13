@@ -1,11 +1,9 @@
 const http = require('http');
 const htmlHandler = require('./htmlResponses.js');
 const responseHandler = require('./responses.js');
-// const xmlHandler = require('./xmlResponses.js');
 
 const port = process.env.PORT || process.env.NODE_PORT || 3000;
 
-// key:value object to look up URL routes to specific functions
 const urlStruct = {
   '/': htmlHandler.getIndex,
   '/getCSS': htmlHandler.getCSS,
@@ -18,8 +16,7 @@ const urlStruct = {
   notFound: responseHandler.notFound,
 };
 
-// handle HTTP requests. In node the HTTP server will automatically
-// send this function request and pre-filled response objects.
+// handle HTTP requests
 const onRequest = (request, response) => {
   // parse the URL
   const protocol = request.connection.encrypted ? 'https' : 'http';

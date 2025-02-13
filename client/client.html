@@ -29,13 +29,7 @@
 </body>
 
 <script>
-  /*A function for handling our fetch response. Read init and sendFetch first.
-
-  Like sendFetch(), handleResponse() is marked as an async function. This is because we
-  make use of the await keyword within it.
-  */
   const handleResponse = (response) => {
-    //Grab the content section from the page
     const content = document.getElementById('content');
 
     //Based on the status code we got back from the server, display something.
@@ -66,47 +60,28 @@
         break;
     }
 
-    /*Unlike the Accept Header demo, this demo only supports JSON. Because of that, we don't
-    need to convert our response to text and then parse that as JSON. JSON is so common that
-    the fetch API handles it innately.
-
-    response.json() is an asychronous call that runs on a background thread. This is because
-    some json responses can be tremendously large, and processing them takes time. We don't want
-    to call the content.innerHTML code below until we have processed the response, so we can
-    use the await keyword to await a "fulfilled" promise from response.json().
-    */
     response.text().then((resText) => {
       const contentType = response.headers.get('Content-Type');
-      console.log("contentType: ", contentType);
 
       if (contentType.includes('text/xml')) { //If the server sent back xml
         //Parse the xml into a document and select the data out.
         console.log("Raw XML: ", resText);
         const parser = new DOMParser();
         const xmlDoc = parser.parseFromString(resText, "text/xml");
-        // Debug parsed XML output
         console.log("Parsed XML:", new XMLSerializer().serializeToString(xmlDoc));
-
         const messageElement = xmlDoc.querySelector("message");
         content.innerHTML += `<br> ${messageElement.textContent} </br>`;
 
       } else {
+        console.log("Raw JSON: ", resText);
         const parsedResponse = JSON.parse(resText);
+        console.log("Parsed JSON:", parsedResponse);
         content.innerHTML += `<br> ${parsedResponse.message} </br>`;
       }
     });
-
-
-    // let resObj = await response.json();
-    // console.log(resObj);
-
-    // //Once the response.json() promise is fulfilled we move to this line, which displays the message.
-    // content.innerHTML += `< p > ${resObj.message}</p >`;
   };
 
   const sendFetch = async (url, type) => {
-    //Call fetch, wait til we get a response, and then store that response in the variable.
-
     const options = {
       method: 'GET',
       headers: { 'Accept': type },
@@ -114,21 +89,12 @@
 
     const fetchPromise = fetch(url, options);
     fetchPromise.then((response) => {
-      console.log("fetch response: ", response);
       handleResponse(response)
     });
   };
 
-
-  /*init is the starting point of our client side code. Below the function, we
-    have window.onload = init, which means that init will automatically be called
-    when the page loads.
-  */
   const getInfo = () => {
-    //Grab references to all the buttons on the page.
     const sendButton = document.querySelector("#send");
-    console.log(document.querySelector("#page").value);
-
     const type = document.querySelector("#type").value;
 
     if (document.querySelector("#page").value === "/success") {

@@ -1,23 +1,18 @@
-// function to send a json object
 const respondJSON = (request, response, status, object) => {
-  // Stringify object
   const content = JSON.stringify(object);
 
-  // Set headers including type and length
   response.writeHead(status, {
-    'Content-Security-Policy': "script-src 'self' 'unsafe-inline'; object-src 'none';",
+    'Content-Security-Policy': "script-src 'self' 'unsafe-inline'; object-src 'none';", //used ChatGPT to help try and solve the error about "eval", wasn't successful but left this here in case all code breaks
     'Content-Type': 'application/json',
     'Content-Length': Buffer.byteLength(content, 'utf8'),
   });
 
-  // Write content and send back to client
   response.write(content);
   response.end();
 };
 
 // used ChatGPT to help me structure XML
 const respondXML = (request, response, status, object) => {
-  // create a valid XML string with name and age tags.
   let responseXML = '<response>';
   responseXML += `<message>${object.message}</message>`;
   if (object.id) {
@@ -31,14 +26,13 @@ const respondXML = (request, response, status, object) => {
     'Content-Length': Buffer.byteLength(responseXML, 'utf8'),
   });
 
-  // Write content and send back to client
   response.write(responseXML);
   response.end();
 };
 
 // Had ChatGPT help me come up with a way to detect the accept type
 const handleResponse = (request, response, status, responseData) => {
-  const accept = request.headers.accept || 'application/json'; // Default to JSON
+  const accept = request.headers.accept || 'application/json';
 
   if (accept.includes('text/xml')) {
     return respondXML(request, response, status, responseData);
@@ -54,101 +48,82 @@ const success = (request, response) => {
   handleResponse(request, response, 200, responseData);
 };
 
-// function to show a bad request without the correct parameters
+// function to show a bad request status code
 const badRequest = (request, response) => {
-  // message to send
-  const responseJSON = {
+  const responseData = {
     message: 'This request has the required parameters',
   };
 
   // if the request does not contain a valid=true query parameter
   if (!request.query.valid || request.query.valid !== 'true') {
-    // set our error message
-    responseJSON.message = 'Missing valid query parameter set to true';
-    // give the error a consistent id
-    responseJSON.id = 'badRequest';
-    // return our json with a 400 bad request code
-    return respondJSON(request, response, 400, responseJSON);
+    responseData.message = 'Missing valid query parameter set to true';
+    responseData.id = 'badRequest';
+    handleResponse(request, response, 400, responseData);
+  } else {
+    handleResponse(request, response, 200, responseData);
   }
-  console.log(`Message: ${responseJSON.message} id: ${responseJSON.id}`);
-
-  // if the parameter is here, send json with a success status code
-  return respondJSON(request, response, 200, responseJSON);
 };
 
+// function to show an unauthorized status code
 const unauthorized = (request, response) => {
-  // message to send
-  const responseJSON = {
+  const responseData = {
     message: 'Missing loggedIn query paramter set to yes',
   };
 
   // if the request does not contain a valid=true query parameter
   if (!request.query.loggedIn || request.query.loggedIn !== 'yes') {
-    // set our error message
-    responseJSON.message = 'Missing valid query parameter set to yes';
-    // give the error a consistent id
-    responseJSON.id = 'unauthorized';
-    // return our json with a 400 bad request code
-    return respondJSON(request, response, 401, responseJSON);
+    responseData.message = 'Missing valid query parameter set to yes';
+    responseData.id = 'unauthorized';
+    handleResponse(request, response, 401, responseData);
+  } else {
+    handleResponse(request, response, 200, responseData);
   }
-  console.log(`Message: ${responseJSON.message} id: ${responseJSON.id}`);
-
-  // if the parameter is here, send json with a success status code
-  return respondJSON(request, response, 200, responseJSON);
 };
 
+// function to show a forbidden status code
 const forbidden = (request, response) => {
-  // message to send
-  const responseJSON = {
+  const responseData = {
     message: 'You do not have access to this content.',
     id: 'forbidden',
   };
-  console.log(`Message: ${responseJSON.message}`);
+  console.log(`Message: ${responseData.message}`);
 
-  // send our json with a success status code
-  respondJSON(request, response, 403, responseJSON);
+  handleResponse(request, response, 403, responseData);
 };
 
+// function to show an internal status code
 const internal = (request, response) => {
-  // message to send
-  const responseJSON = {
+  const responseData = {
     message: 'Internal Server Error. Something went wrong.',
     id: 'internalError',
   };
-  console.log(`Message: ${responseJSON.message}`);
+  console.log(`Message: ${responseData.message}`);
 
-  // send our json with a success status code
-  respondJSON(request, response, 500, responseJSON);
+  handleResponse(request, response, 500, responseData);
 };
 
+// function to show a notImplemented status code
 const notImplemented = (request, response) => {
-  // message to send
-  const responseJSON = {
+  const responseData = {
     message: 'A get request for this page has not been implemented yet. Check again later for updated content.',
     id: 'notImplemented',
   };
-  console.log(`Message: ${responseJSON.message}`);
+  console.log(`Message: ${responseData.message}`);
 
-  // send our json with a success status code
-  respondJSON(request, response, 501, responseJSON);
+  handleResponse(request, response, 501, responseData);
 };
 
 // function to show not found error
 const notFound = (request, response) => {
-  // error message with a description and consistent error id
-  const responseJSON = {
+  const responseData = {
     message: 'The page you are looking for was not found.',
     id: 'notFound',
   };
-  console.log(`Message: ${responseJSON.message}`);
+  console.log(`Message: ${responseData.message}`);
 
-  // return our json with a 404 not found error code
-  respondJSON(request, response, 404, responseJSON);
+  handleResponse(request, response, 404, responseData);
 };
 
-// exports to set functions to public.
-// In this syntax, you can do getIndex:getIndex, but if they
-// are the same name, you can short handle to just getIndex,
 module.exports = {
   success,
   badRequest,
